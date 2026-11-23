@@ -1,1 +1,343 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: #f4f7f2; color: #20352b;
+    }
+    header {
+      background: #174d35; color: white; padding: 20px 6%;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    header h1 { margin: 0; font-size: 25px; }
+    main { max-width: 1100px; margin: 35px auto; padding: 0 18px; }
+    .hero { text-align: center; padding: 25px 10px; }
+    .hero h2 { font-size: 36px; margin-bottom: 10px; }
+    .hero p { color: #627268; }
+    .panel, .card {
+      background: white; padding: 23px; border-radius: 14px;
+      box-shadow: 0 4px 18px #183b2510; margin-bottom: 20px;
+    }
+    .auth { max-width: 440px; margin: 25px auto; }
+    input, select, textarea {
+      width: 100%; padding: 12px; margin: 7px 0 15px;
+      border: 1px solid #d5dfd7; border-radius: 8px;
+      font: inherit; background: white;
+    }
+    textarea { min-height: 75px; }
+    label { font-size: 14px; font-weight: bold; }
+    button {
+      background: #218653; color: white; border: 0;
+      padding: 11px 17px; border-radius: 8px; cursor: pointer;
+      font-weight: bold; margin: 4px 4px 4px 0;
+    }
+    button:hover { background: #176b40; }
+    button.secondary { background: #64766b; }
+    .link { background: none; color: #218653; padding-left: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 16px; }
+    .muted { color: #718077; font-size: 14px; }
+    .tag { display: inline-block; background: #e5f4e9; color: #176b40; padding: 5px 9px; border-radius: 20px; font-size: 12px; }
+    .hidden { display: none; }
+    #message { padding: 10px; border-radius: 8px; margin: 12px 0; }
+    .error { color: #9b2525; background: #ffeded; }
+    .success { color: #176b40; background: #e5f4e9; }
+    .topline { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    @media(max-width:600px) { .hero h2 { font-size: 28px; } header { padding: 16px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🥗 FoodBridge</h1>
+  <span id="headerUser"></span>
+</header>
+
+<main>
+  <section id="welcome">
+    <div class="hero">
+      <h2>Good food deserves a second chance.</h2>
+      <p>Connecting food donors with organizations that help communities.</p>
+      <button onclick="showAuth('login')">Login</button>
+      <button onclick="showAuth('register')">Create account</button>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>🍲 Donate food</h3><p class="muted">Share surplus food with people who need it.</p></div>
+      <div class="card"><h3>🤝 Request food</h3><p class="muted">NGOs can discover and request available donations.</p></div>
+      <div class="card"><h3>🚚 Deliver food</h3><p class="muted">Volunteers help coordinate collection and delivery.</p></div>
+    </div>
+  </section>
+
+  <section id="auth" class="panel auth hidden">
+    <h2 id="authTitle">Login</h2>
+    <div id="registerFields" class="hidden">
+      <label>Full name</label><input id="regName" placeholder="Your name">
+      <label>Account type</label>
+      <select id="regRole">
+        <option value="Donor">Food Donor</option>
+        <option value="NGO">NGO / Recipient</option>
+        <option value="Volunteer">Volunteer</option>
+      </select>
+      <label>Organization name (optional)</label><input id="regOrg" placeholder="Organization">
+    </div>
+    <label>Email</label><input id="email" type="email" placeholder="you@example.com">
+    <label>Password</label><input id="password" type="password" placeholder="At least 8 characters">
+    <button id="authButton" onclick="submitAuth()">Login</button>
+    <button class="secondary" onclick="showWelcome()">Back</button>
+    <p id="authSwitch" class="muted"></p>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="topline">
+      <div><h2 id="welcomeName">Dashboard</h2><p id="roleText" class="muted"></p></div>
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+    <div id="stats" class="grid"></div>
+
+    <div id="donationForm" class="panel hidden">
+      <h3>Post surplus food</h3>
+      <label>Food name</label><input id="foodName" placeholder="e.g. Vegetable rice">
+      <label>Category</label>
+      <select id="category">
+        <option>Cooked meals</option><option>Fruits</option>
+        <option>Vegetables</option><option>Bakery</option><option>Dairy</option><option>Other</option>
+      </select>
+      <div class="grid">
+        <div><label>Quantity</label><input id="quantity" type="number" min="0.1" step="0.1" placeholder="20"></div>
+        <div><label>Unit</label><select id="unit"><option>portions</option><option>kg</option><option>boxes</option><option>packets</option></select></div>
+      </div>
+      <label>Prepared date and time</label><input id="preparedAt" type="datetime-local">
+      <label>Pickup deadline</label><input id="pickupDeadline" type="datetime-local">
+      <label>Pickup location</label><input id="location" placeholder="Address / area">
+      <label>Storage details</label><textarea id="storageDetails" placeholder="How has the food been stored?"></textarea>
+      <label>Allergen notes</label><input id="allergens" placeholder="e.g. Contains peanuts, dairy">
+      <button onclick="postDonation()">Publish donation</button>
+    </div>
+
+    <div id="availableSection" class="hidden">
+      <h3>Available food donations</h3>
+      <div id="availableList" class="grid"></div>
+    </div>
+
+    <div id="donationsSection">
+      <h3 id="donationsTitle">Donations</h3>
+      <div id="donationList" class="grid"></div>
+    </div>
+
+    <div id="requestsSection">
+      <h3>Requests and pickups</h3>
+      <div id="requestList" class="grid"></div>
+    </div>
+
+    <div id="adminSection" class="hidden">
+      <h3>All users</h3><div id="userList" class="grid"></div>
+    </div>
+  </section>
+  <div id="message" class="hidden"></div>
+</main>
+
+<script>
+  let token = sessionStorage.getItem('foodbridgeToken') || '';
+  let currentUser = null;
+  let authMode = 'login';
+
+  function callServer(name, ...args) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(err => reject(new Error(err.message || String(err))))[name](...args);
+    });
+  }
+
+  function notify(text, isError = false) {
+    const box = document.getElementById('message');
+    box.textContent = text;
+    box.className = isError ? 'error' : 'success';
+    box.classList.remove('hidden');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function showOnly(id) {
+    ['welcome','auth','dashboard'].forEach(x =>
+      document.getElementById(x).classList.toggle('hidden', x !== id));
+  }
+
+  function showWelcome() { showOnly('welcome'); }
+
+  function showAuth(mode) {
+    authMode = mode;
+    showOnly('auth');
+    document.getElementById('authTitle').textContent = mode === 'login' ? 'Welcome back' : 'Create your account';
+    document.getElementById('authButton').textContent = mode === 'login' ? 'Login' : 'Register';
+    document.getElementById('registerFields').classList.toggle('hidden', mode !== 'register');
+    document.getElementById('authSwitch').innerHTML = mode === 'login'
+      ? 'New here? <button class="link" onclick="showAuth(\\'register\\')">Register</button>'
+      : 'Already registered? <button class="link" onclick="showAuth(\\'login\\')">Login</button>';
+  }
+
+  async function submitAuth() {
+    try {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      if (authMode === 'register') {
+        await callServer('registerUser', {
+          name: document.getElementById('regName').value,
+          email, password,
+          role: document.getElementById('regRole').value,
+          organization: document.getElementById('regOrg').value
+        });
+        notify('Account created. You can now log in.');
+        showAuth('login');
+      } else {
+        const result = await callServer('loginUser', {email, password});
+        token = result.token;
+        currentUser = result.user;
+        sessionStorage.setItem('foodbridgeToken', token);
+        await loadDashboard();
+      }
+    } catch (e) { notify(e.message, true); }
+  }
+
+  async function loadDashboard() {
+    try {
+      const data = await callServer('getDashboard', token);
+      currentUser = data.user;
+      showOnly('dashboard');
+      document.getElementById('headerUser').textContent = currentUser.name;
+      document.getElementById('welcomeName').textContent = 'Hello, ' + currentUser.name + '!';
+      document.getElementById('roleText').textContent = currentUser.role + ' dashboard';
+
+      const role = currentUser.role;
+      document.getElementById('donationForm').classList.toggle('hidden', role !== 'Donor');
+      document.getElementById('availableSection').classList.toggle('hidden', role !== 'NGO');
+      document.getElementById('adminSection').classList.toggle('hidden', role !== 'Admin');
+      document.getElementById('donationsSection').classList.toggle('hidden', role === 'Volunteer');
+      document.getElementById('requestsSection').classList.toggle('hidden', role === 'Admin');
+
+      document.getElementById('stats').innerHTML = `
+        <div class="card"><h2>${data.donations.length}</h2><p class="muted">Your donations</p></div>
+        <div class="card"><h2>${data.requests.length}</h2><p class="muted">Your requests / pickups</p></div>
+        <div class="card"><h2>${data.available.length}</h2><p class="muted">Available donations</p></div>`;
+
+      document.getElementById('donationList').innerHTML =
+        data.donations.map(d => donationCard(d, false)).join('') || '<p class="muted">No donations yet.</p>';
+
+      document.getElementById('availableList').innerHTML =
+        data.available.map(d => donationCard(d, true)).join('') || '<p class="muted">No food currently available.</p>';
+
+      document.getElementById('requestList').innerHTML =
+        data.requests.map(r => requestCard(r, data.donations)).join('') || '<p class="muted">No requests yet.</p>';
+
+      if (role === 'Admin') {
+        const admin = await callServer('getAdminData', token);
+        document.getElementById('userList').innerHTML = admin.users.map(u =>
+          `<div class="card"><b>${esc(u.name)}</b><p>${esc(u.email)}</p><span class="tag">${esc(u.role)}</span></div>`
+        ).join('');
+        document.getElementById('stats').innerHTML += `
+          <div class="card"><h2>${admin.donations.length}</h2><p class="muted">All donations</p></div>`;
+      }
+    } catch (e) {
+      notify(e.message, true);
+      if (e.message.toLowerCase().includes('session')) logout();
+    }
+  }
+
+  function donationCard(d, canRequest) {
+    return `<div class="card">
+      <span class="tag">${esc(d.status)}</span>
+      <h3>${esc(d.foodName)}</h3>
+      <p>${esc(d.category)} · ${esc(d.quantity)} ${esc(d.unit)}</p>
+      <p class="muted">📍 ${esc(d.location)}</p>
+      <p class="muted">Pickup by: ${esc(d.pickupDeadline)}</p>
+      <p class="muted">Storage: ${esc(d.storageDetails || 'Not specified')}</p>
+      <p class="muted">Allergens: ${esc(d.allergens || 'Not specified')}</p>
+      ${canRequest ? `<button onclick="requestFood('${d.id}')">Request food</button>` : ''}
+    </div>`;
+  }
+
+  function requestCard(r, donations) {
+    const donation = donations.find(d => d.id === r.donationId);
+    const food = donation ? donation.foodName : 'Food donation';
+    let actions = '';
+
+    if (currentUser.role === 'Donor' && r.status === 'Pending') {
+      actions = `<button onclick="act('${r.id}','Accepted')">Accept</button>
+        <button class="secondary" onclick="act('${r.id}','Rejected')">Reject</button>`;
+    }
+    if (currentUser.role === 'Volunteer' && r.status === 'Accepted' && !r.volunteerId) {
+      actions = `<button onclick="act('${r.id}','Claim')">Claim pickup</button>`;
+    }
+    if (currentUser.role === 'Volunteer' && r.volunteerId === currentUser.id) {
+      if (donation && donation.status === 'Accepted')
+        actions = `<button onclick="act('${r.id}','Collected')">Mark collected</button>`;
+      if (donation && donation.status === 'Collected')
+        actions = `<button onclick="act('${r.id}','Delivered')">Mark delivered</button>`;
+    }
+
+    return `<div class="card">
+      <h3>${esc(food)}</h3><span class="tag">${esc(r.status)}</span>
+      <p class="muted">Request ID: ${esc(r.id)}</p>
+      <p>${esc(r.message || 'No message')}</p>${actions}
+    </div>`;
+  }
+
+  async function postDonation() {
+    try {
+      await callServer('createDonation', token, {
+        foodName: val('foodName'), category: val('category'),
+        quantity: val('quantity'), unit: val('unit'),
+        preparedAt: val('preparedAt'), pickupDeadline: val('pickupDeadline'),
+        location: val('location'), storageDetails: val('storageDetails'),
+        allergens: val('allergens')
+      });
+      notify('Your food donation has been published!');
+      ['foodName','quantity','preparedAt','pickupDeadline','location','storageDetails','allergens']
+        .forEach(id => document.getElementById(id).value = '');
+      await loadDashboard();
+    } catch (e) { notify(e.message, true); }
+  }
+
+  async function requestFood(id) {
+    const message = prompt('Add a short message for the donor (optional):') || '';
+    try {
+      await callServer('requestDonation', token, id, message);
+      notify('Your request has been sent!');
+      await loadDashboard();
+    } catch (e) { notify(e.message, true); }
+  }
+
+  async function act(id, action) {
+    try {
+      await callServer('updateRequest', token, id, action);
+      notify('Request updated successfully.');
+      await loadDashboard();
+    } catch (e) { notify(e.message, true); }
+  }
+
+  async function logout() {
+    try { if (token) await callServer('logoutUser', token); } catch (e) {}
+    token = '';
+    currentUser = null;
+    sessionStorage.removeItem('foodbridgeToken');
+    document.getElementById('headerUser').textContent = '';
+    showWelcome();
+  }
+
+  function val(id) { return document.getElementById(id).value; }
+
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[c]));
+  }
+
+  window.addEventListener('load', () => {
+    if (token) loadDashboard();
+  });
+</script>
+</body>
+</html>
+
